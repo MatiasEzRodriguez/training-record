@@ -39,8 +39,8 @@ export function WorkoutLogger() {
     return null;
   }
 
-  const handleAddSet = (exerciseId, reps, weight) => {
-    addSet(exerciseId, { reps, weight, completed: true });
+  const handleAddSet = (exerciseId, reps, weight, isSingleDumbbell) => {
+    addSet(exerciseId, { reps, weight, isSingleDumbbell, completed: true });
     
     // Start rest timer
     if (restTime > 0) {
@@ -129,7 +129,7 @@ export function WorkoutLogger() {
                   >
                     <span className="text-gray-400 w-12">#{index + 1}</span>
                     <span className="flex-1 text-center">
-                      {set.weight} kg × {set.reps}
+                      {set.weight} kg × {set.reps} {set.isSingleDumbbell && '(1 mancuerna)'}
                     </span>
                     <button
                       onClick={() => removeSet(exercise.id, set.id)}
@@ -144,7 +144,7 @@ export function WorkoutLogger() {
             
             {/* Add Set */}
             <div className="p-4">
-              <SetInput onSubmit={(reps, weight) => handleAddSet(exercise.id, reps, weight)} />
+              <SetInput onSubmit={(reps, weight, isSingleDumbbell) => handleAddSet(exercise.id, reps, weight, isSingleDumbbell)} />
             </div>
           </div>
         ))}

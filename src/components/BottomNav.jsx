@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { Home, Dumbbell, History, Settings } from 'lucide-react';
+import { Home, Dumbbell, History } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 
 const navItems = [
