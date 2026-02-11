@@ -34,10 +34,10 @@ export function SetInput({ onSubmit }) {
       {/* Weight Input */}
       <div>
         <label className="block text-xs text-gray-400 mb-1">Peso total (kg)</label>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center justify-center gap-1">
           <button
             onClick={() => adjustValue(weight, -2.5, setWeight, true)}
-            className="p-2 bg-gray-800 rounded-lg active:scale-95 transition-transform min-w-[44px] min-h-[44px] flex items-center justify-center"
+            className="p-2 bg-gray-800 rounded-lg active:scale-95 transition-transform min-w-[40px] min-h-[40px] flex items-center justify-center"
           >
             <Minus className="w-4 h-4" />
           </button>
@@ -47,12 +47,12 @@ export function SetInput({ onSubmit }) {
             value={weight}
             onChange={(e) => setWeight(e.target.value)}
             placeholder="0"
-            className="flex-1 bg-gray-800 rounded-lg p-2 text-center text-lg font-semibold
-              focus:outline-none focus:ring-2 focus:ring-blue-600 min-h-[44px]"
+            className="w-20 bg-gray-800 rounded-lg p-2 text-center text-lg font-semibold
+              focus:outline-none focus:ring-2 focus:ring-blue-600 min-h-[40px]"
           />
           <button
             onClick={() => adjustValue(weight, 2.5, setWeight, true)}
-            className="p-2 bg-gray-800 rounded-lg active:scale-95 transition-transform min-w-[44px] min-h-[44px] flex items-center justify-center"
+            className="p-2 bg-gray-800 rounded-lg active:scale-95 transition-transform min-w-[40px] min-h-[40px] flex items-center justify-center"
           >
             <Plus className="w-4 h-4" />
           </button>
@@ -62,10 +62,10 @@ export function SetInput({ onSubmit }) {
       {/* Reps Input */}
       <div>
         <label className="block text-xs text-gray-400 mb-1">Reps</label>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center justify-center gap-1">
           <button
             onClick={() => adjustValue(reps, -1, setReps)}
-            className="p-2 bg-gray-800 rounded-lg active:scale-95 transition-transform min-w-[44px] min-h-[44px] flex items-center justify-center"
+            className="p-2 bg-gray-800 rounded-lg active:scale-95 transition-transform min-w-[40px] min-h-[40px] flex items-center justify-center"
           >
             <Minus className="w-4 h-4" />
           </button>
@@ -75,12 +75,12 @@ export function SetInput({ onSubmit }) {
             value={reps}
             onChange={(e) => setReps(e.target.value)}
             placeholder="0"
-            className="flex-1 bg-gray-800 rounded-lg p-2 text-center text-lg font-semibold
-              focus:outline-none focus:ring-2 focus:ring-blue-600 min-h-[44px]"
+            className="w-16 bg-gray-800 rounded-lg p-2 text-center text-lg font-semibold
+              focus:outline-none focus:ring-2 focus:ring-blue-600 min-h-[40px]"
           />
           <button
             onClick={() => adjustValue(reps, 1, setReps)}
-            className="p-2 bg-gray-800 rounded-lg active:scale-95 transition-transform min-w-[44px] min-h-[44px] flex items-center justify-center"
+            className="p-2 bg-gray-800 rounded-lg active:scale-95 transition-transform min-w-[40px] min-h-[40px] flex items-center justify-center"
           >
             <Plus className="w-4 h-4" />
           </button>
