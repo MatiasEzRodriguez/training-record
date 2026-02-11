@@ -74,19 +74,26 @@ export function History() {
 
               {/* Exercises Preview */}
               <div className="mt-3 pt-3 border-t border-gray-800">
-                <div className="flex flex-wrap gap-2">
+                <div className="space-y-2">
                   {workout.exercises.slice(0, 3).map((ex) => (
-                    <span
-                      key={ex.id}
-                      className="text-xs bg-gray-800 px-2 py-1 rounded"
-                    >
-                      {ex.name}
-                    </span>
+                    <div key={ex.id}>
+                      <p className="text-sm font-medium text-gray-300">{ex.name}</p>
+                      {ex.sets.length > 0 && (
+                        <p className="text-xs text-gray-500">
+                          {ex.sets.map((set, idx) => (
+                            <span key={set.id}>
+                              {set.weight}kg×{set.reps}{set.isSingleDumbbell ? '(1)' : ''}
+                              {idx < ex.sets.length - 1 ? ', ' : ''}
+                            </span>
+                          ))}
+                        </p>
+                      )}
+                    </div>
                   ))}
                   {workout.exercises.length > 3 && (
-                    <span className="text-xs text-gray-500">
-                      +{workout.exercises.length - 3} más
-                    </span>
+                    <p className="text-xs text-gray-500">
+                      +{workout.exercises.length - 3} ejercicios más
+                    </p>
                   )}
                 </div>
               </div>

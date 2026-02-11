@@ -124,6 +124,17 @@ export const useWorkoutStore = create(
         }));
       },
       
+      removeExerciseFromWorkout: (exerciseId) => {
+        if (!get().activeWorkout) return;
+        
+        set((state) => ({
+          activeWorkout: {
+            ...state.activeWorkout,
+            exercises: state.activeWorkout.exercises.filter((ex) => ex.id !== exerciseId),
+          },
+        }));
+      },
+      
       addSet: (exerciseId, set) =>
         set((state) => ({
           activeWorkout: {
@@ -220,6 +231,15 @@ export const useWorkoutStore = create(
     }),
     {
       name: 'workout-storage',
+      onRehydrateStorage: () => (state) => {
+        // Convert date strings back to Date objects
+        if (state && state.workouts) {
+          state.workouts = state.workouts.map(workout => ({
+            ...workout,
+            date: new Date(workout.date),
+          }));
+        }
+      },
     }
   )
 );

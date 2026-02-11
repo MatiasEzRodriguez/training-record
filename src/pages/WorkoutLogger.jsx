@@ -3,7 +3,6 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { 
   ArrowLeft, 
   Plus, 
-  Check, 
   X, 
   Clock,
   Timer,
@@ -20,12 +19,14 @@ export function WorkoutLogger() {
   const [restTimer, setRestTimer] = useState(null);
   const [restTime, setRestTime] = useState(60);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const [showSuccessFeedback, setShowSuccessFeedback] = useState(false);
   
   const {
     activeWorkout,
     exercises,
     startWorkout,
     addExerciseToWorkout,
+    removeExerciseFromWorkout,
     addSet,
     removeSet,
     completeWorkout,
@@ -42,6 +43,10 @@ export function WorkoutLogger() {
   const handleAddSet = (exerciseId, reps, weight, isSingleDumbbell) => {
     addSet(exerciseId, { reps, weight, isSingleDumbbell, completed: true });
     
+    // Show success feedback
+    setShowSuccessFeedback(true);
+    setTimeout(() => setShowSuccessFeedback(false), 1500);
+    
     // Start rest timer
     if (restTime > 0) {
       setIsTimerRunning(true);
@@ -55,6 +60,12 @@ export function WorkoutLogger() {
           setRestTimer(null);
         }
       }, 1000);
+    }
+  };
+
+  const handleRemoveExercise = (exerciseId) => {
+    if (confirm('¿Estás seguro de eliminar este ejercicio?')) {
+      removeExerciseFromWorkout(exerciseId);
     }
   };
 
@@ -96,6 +107,15 @@ export function WorkoutLogger() {
         </div>
       </div>
 
+      {/* Success Feedback */}
+      {showSuccessFeedback && (
+        <div className="bg-green-900/30 border-y border-green-800 px-4 py-2">
+          <div className="flex items-center justify-center gap-2">
+            <span className="text-green-400 font-medium">Serie agregada</span>
+          </div>
+        </div>
+      )}
+
       {/* Rest Timer */}
       {isTimerRunning && restTimer !== null && (
         <div className="bg-blue-900/30 border-y border-blue-800 px-4 py-3">
@@ -113,10 +133,21 @@ export function WorkoutLogger() {
         {activeWorkout.exercises.map((exercise) => (
           <div key={exercise.id} className="bg-gray-900 rounded-xl border border-gray-800">
             <div className="p-4 border-b border-gray-800">
-              <h3 className="font-semibold text-lg">{exercise.name}</h3>
-              <p className="text-sm text-gray-400">
-                {exercise.sets.length} series completadas
-              </p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-semibold text-lg">{exercise.name}</h3>
+                  <p className="text-sm text-gray-400">
+                    {exercise.sets.length} series completadas
+                  </p>
+                </div>
+                <button
+                  onClick={() => handleRemoveExercise(exercise.id)}
+                  className="p-2 text-red-400 hover:bg-red-900/20 rounded-lg transition-colors"
+                  title="Eliminar ejercicio"
+                >
+                  <Trash2 className="w-5 h-5" />
+                </button>
+              </div>
             </div>
             
             {/* Sets List */}
