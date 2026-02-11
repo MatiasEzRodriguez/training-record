@@ -135,17 +135,25 @@ export const useWorkoutStore = create(
         }));
       },
       
-      addSet: (exerciseId, set) =>
-        set((state) => ({
-          activeWorkout: {
-            ...state.activeWorkout,
-            exercises: state.activeWorkout.exercises.map((ex) =>
-              ex.id === exerciseId
-                ? { ...ex, sets: [...ex.sets, { ...set, id: uuidv4() }] }
-                : ex
-            ),
-          },
-        })),
+      addSet: (exerciseId, set) => {
+        console.log('addSet called with exerciseId:', exerciseId, 'set:', set);
+        console.log('Current activeWorkout:', get().activeWorkout);
+        set((state) => {
+          const updatedExercises = state.activeWorkout.exercises.map((ex) => {
+            console.log('Checking exercise:', ex.id, 'against:', exerciseId, 'match:', ex.id === exerciseId);
+            return ex.id === exerciseId
+              ? { ...ex, sets: [...ex.sets, { ...set, id: uuidv4() }] }
+              : ex;
+          });
+          console.log('Updated exercises:', updatedExercises);
+          return {
+            activeWorkout: {
+              ...state.activeWorkout,
+              exercises: updatedExercises,
+            },
+          };
+        });
+      },
       
       removeSet: (exerciseId, setId) =>
         set((state) => ({

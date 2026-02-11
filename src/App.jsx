@@ -7,7 +7,7 @@ import { BottomNav } from './components/BottomNav';
 
 function App() {
   return (
-    <div className="min-h-screen bg-gray-950 text-gray-100 pb-24">
+    <div className="min-h-screen bg-gray-950 text-gray-100 pb-32">
       <Routes>
         <Route path="/" element={<Dashboard />} />
         <Route path="/workout" element={<WorkoutLogger />} />

@@ -7,7 +7,9 @@ import {
   Clock,
   Timer,
   Save,
-  Trash2
+  Trash2,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { useWorkoutStore } from '@/stores/workoutStore';
 import { SetInput } from '@/components/SetInput';
@@ -20,6 +22,22 @@ export function WorkoutLogger() {
   const [restTime, setRestTime] = useState(60);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [showSuccessFeedback, setShowSuccessFeedback] = useState(false);
+  const [expandedCategories, setExpandedCategories] = useState({});
+
+  // Group exercises by category
+  const exercisesByCategory = exercises.reduce((acc, exercise) => {
+    const category = exercise.category || 'Otros';
+    if (!acc[category]) acc[category] = [];
+    acc[category].push(exercise);
+    return acc;
+  }, {});
+
+  const toggleCategory = (category) => {
+    setExpandedCategories(prev => ({
+      ...prev,
+      [category]: !prev[category]
+    }));
+  };
   
   const {
     activeWorkout,
@@ -41,6 +59,7 @@ export function WorkoutLogger() {
   }
 
   const handleAddSet = (exerciseId, reps, weight, isSingleDumbbell) => {
+    console.log('handleAddSet called:', { exerciseId, reps, weight, isSingleDumbbell });
     addSet(exerciseId, { reps, weight, isSingleDumbbell, completed: true });
     
     // Show success feedback
@@ -251,19 +270,42 @@ export function WorkoutLogger() {
               </button>
             </div>
             <div className="space-y-2">
-              {exercises.map((exercise) => (
-                <button
-                  key={exercise.id}
-                  onClick={() => {
-                    addExerciseToWorkout(exercise.id);
-                    setShowAddExercise(false);
-                  }}
-                  className="w-full p-4 bg-gray-800 rounded-xl text-left
-                    active:scale-95 transition-transform"
-                >
-                  <p className="font-medium">{exercise.name}</p>
-                  <p className="text-sm text-gray-400">{exercise.category}</p>
-                </button>
+              {Object.entries(exercisesByCategory).map(([category, categoryExercises]) => (
+                <div key={category} className="bg-gray-800 rounded-xl overflow-hidden">
+                  <button
+                    onClick={() => toggleCategory(category)}
+                    className="w-full p-4 flex items-center justify-between text-left
+                      active:scale-[0.98] transition-transform"
+                  >
+                    <span className="font-semibold text-lg">{category}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-gray-400">{categoryExercises.length}</span>
+                      {expandedCategories[category] ? (
+                        <ChevronUp className="w-5 h-5 text-gray-400" />
+                      ) : (
+                        <ChevronDown className="w-5 h-5 text-gray-400" />
+                      )}
+                    </div>
+                  </button>
+                  {expandedCategories[category] && (
+                    <div className="border-t border-gray-700">
+                      {categoryExercises.map((exercise) => (
+                        <button
+                          key={exercise.id}
+                          onClick={() => {
+                            addExerciseToWorkout(exercise.id);
+                            setShowAddExercise(false);
+                          }}
+                          className="w-full p-4 text-left bg-gray-800 hover:bg-gray-750
+                            active:bg-gray-700 transition-colors border-b border-gray-700/50
+                            last:border-b-0"
+                        >
+                          <p className="font-medium">{exercise.name}</p>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
           </div>
