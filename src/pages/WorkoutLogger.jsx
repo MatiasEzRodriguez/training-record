@@ -59,7 +59,6 @@ export function WorkoutLogger() {
   }
 
   const handleAddSet = (exerciseId, reps, weight, isSingleDumbbell) => {
-    console.log('handleAddSet called:', { exerciseId, reps, weight, isSingleDumbbell });
     addSet(exerciseId, { reps, weight, isSingleDumbbell, completed: true });
     
     // Show success feedback
