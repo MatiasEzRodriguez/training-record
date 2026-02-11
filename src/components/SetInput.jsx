@@ -20,7 +20,12 @@ export function SetInput({ onSubmit }) {
 
   const adjustValue = (value, delta, setter, isFloat = false) => {
     const num = isFloat ? parseFloat(value) || 0 : parseInt(value, 10) || 0;
-    const result = isFloat ? Math.round((num + delta) * 10) / 10 : Math.max(0, num + delta);
+    let result;
+    if (isFloat) {
+      result = Math.max(0, Math.round((num + delta) * 10) / 10);
+    } else {
+      result = Math.max(0, num + delta);
+    }
     setter(result.toString());
   };
 
@@ -29,12 +34,12 @@ export function SetInput({ onSubmit }) {
       {/* Weight Input */}
       <div>
         <label className="block text-xs text-gray-400 mb-1">Peso total (kg)</label>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <button
             onClick={() => adjustValue(weight, -2.5, setWeight, true)}
-            className="p-3 bg-gray-800 rounded-lg active:scale-95 transition-transform"
+            className="p-2 bg-gray-800 rounded-lg active:scale-95 transition-transform min-w-[44px] min-h-[44px] flex items-center justify-center"
           >
-            <Minus className="w-5 h-5" />
+            <Minus className="w-4 h-4" />
           </button>
           <input
             type="number"
@@ -42,14 +47,14 @@ export function SetInput({ onSubmit }) {
             value={weight}
             onChange={(e) => setWeight(e.target.value)}
             placeholder="0"
-            className="flex-1 bg-gray-800 rounded-lg p-3 text-center text-xl font-semibold
-              focus:outline-none focus:ring-2 focus:ring-blue-600 min-h-[48px]"
+            className="flex-1 bg-gray-800 rounded-lg p-2 text-center text-lg font-semibold
+              focus:outline-none focus:ring-2 focus:ring-blue-600 min-h-[44px]"
           />
           <button
             onClick={() => adjustValue(weight, 2.5, setWeight, true)}
-            className="p-3 bg-gray-800 rounded-lg active:scale-95 transition-transform"
+            className="p-2 bg-gray-800 rounded-lg active:scale-95 transition-transform min-w-[44px] min-h-[44px] flex items-center justify-center"
           >
-            <Plus className="w-5 h-5" />
+            <Plus className="w-4 h-4" />
           </button>
         </div>
       </div>
@@ -57,12 +62,12 @@ export function SetInput({ onSubmit }) {
       {/* Reps Input */}
       <div>
         <label className="block text-xs text-gray-400 mb-1">Reps</label>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <button
             onClick={() => adjustValue(reps, -1, setReps)}
-            className="p-3 bg-gray-800 rounded-lg active:scale-95 transition-transform"
+            className="p-2 bg-gray-800 rounded-lg active:scale-95 transition-transform min-w-[44px] min-h-[44px] flex items-center justify-center"
           >
-            <Minus className="w-5 h-5" />
+            <Minus className="w-4 h-4" />
           </button>
           <input
             type="number"
@@ -70,14 +75,14 @@ export function SetInput({ onSubmit }) {
             value={reps}
             onChange={(e) => setReps(e.target.value)}
             placeholder="0"
-            className="flex-1 bg-gray-800 rounded-lg p-3 text-center text-xl font-semibold
-              focus:outline-none focus:ring-2 focus:ring-blue-600 min-h-[48px]"
+            className="flex-1 bg-gray-800 rounded-lg p-2 text-center text-lg font-semibold
+              focus:outline-none focus:ring-2 focus:ring-blue-600 min-h-[44px]"
           />
           <button
             onClick={() => adjustValue(reps, 1, setReps)}
-            className="p-3 bg-gray-800 rounded-lg active:scale-95 transition-transform"
+            className="p-2 bg-gray-800 rounded-lg active:scale-95 transition-transform min-w-[44px] min-h-[44px] flex items-center justify-center"
           >
-            <Plus className="w-5 h-5" />
+            <Plus className="w-4 h-4" />
           </button>
         </div>
       </div>
