@@ -24,14 +24,6 @@ export function WorkoutLogger() {
   const [showSuccessFeedback, setShowSuccessFeedback] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState({});
 
-  // Group exercises by category
-  const exercisesByCategory = exercises.reduce((acc, exercise) => {
-    const category = exercise.category || 'Otros';
-    if (!acc[category]) acc[category] = [];
-    acc[category].push(exercise);
-    return acc;
-  }, {});
-
   const toggleCategory = (category) => {
     setExpandedCategories(prev => ({
       ...prev,
@@ -57,6 +49,14 @@ export function WorkoutLogger() {
     startWorkout('Entrenamiento Libre', routineId);
     return null;
   }
+
+  // Group exercises by category
+  const exercisesByCategory = exercises.reduce((acc, exercise) => {
+    const category = exercise.category || 'Otros';
+    if (!acc[category]) acc[category] = [];
+    acc[category].push(exercise);
+    return acc;
+  }, {});
 
   const handleAddSet = (exerciseId, reps, weight, isSingleDumbbell) => {
     addSet(exerciseId, { reps, weight, isSingleDumbbell, completed: true });
