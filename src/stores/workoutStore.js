@@ -137,12 +137,18 @@ export const useWorkoutStore = create(
       
       addSet: (exerciseId, set) => {
         set((state) => {
-          if (!state.activeWorkout) return state;
+          if (!state.activeWorkout || !Array.isArray(state.activeWorkout.exercises)) {
+            return state;
+          }
           
           const updatedExercises = state.activeWorkout.exercises.map((ex) => {
-            return ex.id === exerciseId
-              ? { ...ex, sets: [...ex.sets, { ...set, id: uuidv4() }] }
-              : ex;
+            if (ex.id !== exerciseId) return ex;
+            return {
+              ...ex,
+              sets: Array.isArray(ex.sets) 
+                ? [...ex.sets, { ...set, id: uuidv4() }]
+                : [{ ...set, id: uuidv4() }]
+            };
           });
           
           return {
@@ -156,12 +162,14 @@ export const useWorkoutStore = create(
       
       removeSet: (exerciseId, setId) =>
         set((state) => {
-          if (!state.activeWorkout) return state;
+          if (!state.activeWorkout || !Array.isArray(state.activeWorkout.exercises)) {
+            return state;
+          }
           return {
             activeWorkout: {
               ...state.activeWorkout,
               exercises: state.activeWorkout.exercises.map((ex) =>
-                ex.id === exerciseId
+                ex.id === exerciseId && Array.isArray(ex.sets)
                   ? { ...ex, sets: ex.sets.filter((s) => s.id !== setId) }
                   : ex
               ),
