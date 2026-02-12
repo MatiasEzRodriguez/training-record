@@ -1,6 +1,10 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { v4 as uuidv4 } from 'uuid';
+
+// Simple ID generator to replace uuid
+const generateId = () => {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2);
+};
 
 /**
  * @typedef {Object} Exercise
@@ -57,7 +61,7 @@ export const useWorkoutStore = create(
       // Actions
       addExercise: (exercise) =>
         set((state) => ({
-          exercises: [...state.exercises, { ...exercise, id: uuidv4() }],
+          exercises: [...state.exercises, { ...exercise, id: generateId() }],
         })),
       
       removeExercise: (id) =>
@@ -67,7 +71,7 @@ export const useWorkoutStore = create(
       
       addRoutine: (routine) =>
         set((state) => ({
-          routines: [...state.routines, { ...routine, id: uuidv4() }],
+          routines: [...state.routines, { ...routine, id: generateId() }],
         })),
       
       removeRoutine: (id) =>
@@ -84,7 +88,7 @@ export const useWorkoutStore = create(
           ? routine.exerciseIds.map((exerciseId) => {
               const exercise = get().exercises.find((e) => e.id === exerciseId);
               return {
-                id: uuidv4(),
+                id: generateId(),
                 exerciseId,
                 name: exercise?.name || 'Ejercicio',
                 sets: [],
@@ -94,7 +98,7 @@ export const useWorkoutStore = create(
         
         set({
           activeWorkout: {
-            id: uuidv4(),
+            id: generateId(),
             name,
             date: new Date(),
             exercises: workoutExercises,
@@ -114,7 +118,7 @@ export const useWorkoutStore = create(
             exercises: [
               ...state.activeWorkout.exercises,
               {
-                id: uuidv4(),
+                id: generateId(),
                 exerciseId,
                 name: exercise.name,
                 sets: [],
@@ -146,8 +150,8 @@ export const useWorkoutStore = create(
             return {
               ...ex,
               sets: Array.isArray(ex.sets) 
-                ? [...ex.sets, { ...set, id: uuidv4() }]
-                : [{ ...set, id: uuidv4() }]
+                ? [...ex.sets, { ...set, id: generateId() }]
+                : [{ ...set, id: generateId() }]
             };
           });
           
