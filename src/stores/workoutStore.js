@@ -1,67 +1,19 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-// Simple ID generator to replace uuid
-const generateId = () => {
-  return Date.now().toString(36) + Math.random().toString(36).substr(2);
-};
-
-/**
- * @typedef {Object} Exercise
- * @property {string} id
- * @property {string} name
- * @property {string} category
- * @property {string} [notes]
- */
-
-/**
- * @typedef {Object} Set
- * @property {string} id
- * @property {number} reps
- * @property {number} weight
- * @property {boolean} completed
- * @property {string} [notes]
- */
-
-/**
- * @typedef {Object} WorkoutExercise
- * @property {string} id
- * @property {string} exerciseId
- * @property {string} name
- * @property {Set[]} sets
- */
-
-/**
- * @typedef {Object} Workout
- * @property {string} id
- * @property {string} name
- * @property {Date} date
- * @property {WorkoutExercise[]} exercises
- * @property {number} duration
- * @property {string} [notes]
- */
-
-/**
- * @typedef {Object} Routine
- * @property {string} id
- * @property {string} name
- * @property {string[]} exerciseIds
- * @property {string} [notes]
- */
+const id = () => Math.random().toString(36).substr(2, 9);
 
 export const useWorkoutStore = create(
   persist(
     (set, get) => ({
-      // State
       workouts: [],
       routines: [],
       exercises: [],
       activeWorkout: null,
       
-      // Actions
       addExercise: (exercise) =>
         set((state) => ({
-          exercises: [...state.exercises, { ...exercise, id: generateId() }],
+          exercises: [...state.exercises, { ...exercise, id: id() }],
         })),
       
       removeExercise: (id) =>
@@ -71,7 +23,7 @@ export const useWorkoutStore = create(
       
       addRoutine: (routine) =>
         set((state) => ({
-          routines: [...state.routines, { ...routine, id: generateId() }],
+          routines: [...state.routines, { ...routine, id: id() }],
         })),
       
       removeRoutine: (id) =>
@@ -80,15 +32,13 @@ export const useWorkoutStore = create(
         })),
       
       startWorkout: (name = 'Entrenamiento Libre', routineId = null) => {
-        const routine = routineId 
-          ? get().routines.find((r) => r.id === routineId)
-          : null;
+        const routine = routineId ? get().routines.find((r) => r.id === routineId) : null;
         
         const workoutExercises = routine
           ? routine.exerciseIds.map((exerciseId) => {
               const exercise = get().exercises.find((e) => e.id === exerciseId);
               return {
-                id: generateId(),
+                id: id(),
                 exerciseId,
                 name: exercise?.name || 'Ejercicio',
                 sets: [],
@@ -98,7 +48,7 @@ export const useWorkoutStore = create(
         
         set({
           activeWorkout: {
-            id: generateId(),
+            id: id(),
             name,
             date: new Date(),
             exercises: workoutExercises,
@@ -118,7 +68,7 @@ export const useWorkoutStore = create(
             exercises: [
               ...state.activeWorkout.exercises,
               {
-                id: generateId(),
+                id: id(),
                 exerciseId,
                 name: exercise.name,
                 sets: [],
@@ -139,26 +89,20 @@ export const useWorkoutStore = create(
         }));
       },
       
-      addSet: (exerciseId, set) => {
+      addSet: (exerciseId, newSet) => {
         set((state) => {
-          if (!state.activeWorkout || !Array.isArray(state.activeWorkout.exercises)) {
-            return state;
-          }
-          
-          const updatedExercises = state.activeWorkout.exercises.map((ex) => {
-            if (ex.id !== exerciseId) return ex;
-            return {
-              ...ex,
-              sets: Array.isArray(ex.sets) 
-                ? [...ex.sets, { ...set, id: generateId() }]
-                : [{ ...set, id: generateId() }]
-            };
-          });
+          if (!state.activeWorkout) return state;
           
           return {
             activeWorkout: {
               ...state.activeWorkout,
-              exercises: updatedExercises,
+              exercises: state.activeWorkout.exercises.map((ex) => {
+                if (ex.id !== exerciseId) return ex;
+                return {
+                  ...ex,
+                  sets: [...(ex.sets || []), { ...newSet, id: id() }],
+                };
+              }),
             },
           };
         });
@@ -166,15 +110,13 @@ export const useWorkoutStore = create(
       
       removeSet: (exerciseId, setId) =>
         set((state) => {
-          if (!state.activeWorkout || !Array.isArray(state.activeWorkout.exercises)) {
-            return state;
-          }
+          if (!state.activeWorkout) return state;
           return {
             activeWorkout: {
               ...state.activeWorkout,
               exercises: state.activeWorkout.exercises.map((ex) =>
-                ex.id === exerciseId && Array.isArray(ex.sets)
-                  ? { ...ex, sets: ex.sets.filter((s) => s.id !== setId) }
+                ex.id === exerciseId
+                  ? { ...ex, sets: (ex.sets || []).filter((s) => s.id !== setId) }
                   : ex
               ),
             },
@@ -185,42 +127,28 @@ export const useWorkoutStore = create(
         const { activeWorkout } = get();
         if (!activeWorkout) return;
         
-        const duration = Math.floor(
-          (new Date() - new Date(activeWorkout.date)) / 1000 / 60
-        );
-        
-        const completedWorkout = {
-          ...activeWorkout,
-          duration,
-        };
+        const duration = Math.floor((new Date() - new Date(activeWorkout.date)) / 1000 / 60);
         
         set((state) => ({
-          workouts: [completedWorkout, ...state.workouts],
+          workouts: [{ ...activeWorkout, duration }, ...state.workouts],
           activeWorkout: null,
         }));
       },
       
-      cancelWorkout: () =>
-        set({ activeWorkout: null }),
+      cancelWorkout: () => set({ activeWorkout: null }),
       
       updateWorkoutNotes: (notes) =>
         set((state) => {
           if (!state.activeWorkout) return state;
-          return {
-            activeWorkout: { ...state.activeWorkout, notes },
-          };
+          return { activeWorkout: { ...state.activeWorkout, notes } };
         }),
       
-      // Data export/import
-      exportData: () => {
-        const data = {
-          workouts: get().workouts,
-          routines: get().routines,
-          exercises: get().exercises,
-          exportDate: new Date().toISOString(),
-        };
-        return JSON.stringify(data, null, 2);
-      },
+      exportData: () => JSON.stringify({
+        workouts: get().workouts,
+        routines: get().routines,
+        exercises: get().exercises,
+        exportDate: new Date().toISOString(),
+      }, null, 2),
       
       importData: (jsonString) => {
         try {
@@ -235,7 +163,6 @@ export const useWorkoutStore = create(
         }
       },
       
-      // Getters
       getLastWorkout: () => {
         const { workouts } = get();
         return workouts.length > 0 ? workouts[0] : null;
@@ -246,7 +173,7 @@ export const useWorkoutStore = create(
       getTotalVolume: () => {
         return get().workouts.reduce((total, workout) => {
           const workoutVolume = workout.exercises.reduce((exTotal, ex) => {
-            return exTotal + ex.sets.reduce((setTotal, set) => {
+            return exTotal + (ex.sets || []).reduce((setTotal, set) => {
               return setTotal + (set.weight * set.reps);
             }, 0);
           }, 0);
@@ -255,27 +182,7 @@ export const useWorkoutStore = create(
       },
     }),
     {
-      name: 'workout-storage-v2',
-      onRehydrateStorage: () => (state) => {
-        // Convert date strings back to Date objects
-        if (state && state.workouts) {
-          state.workouts = state.workouts.map(workout => ({
-            ...workout,
-            date: new Date(workout.date),
-          }));
-        }
-        // Ensure activeWorkout has proper structure
-        if (state && state.activeWorkout) {
-          if (!Array.isArray(state.activeWorkout.exercises)) {
-            state.activeWorkout.exercises = [];
-          }
-          state.activeWorkout.exercises.forEach(ex => {
-            if (!Array.isArray(ex.sets)) {
-              ex.sets = [];
-            }
-          });
-        }
-      },
+      name: 'workout-storage-v3',
     }
   )
 );
