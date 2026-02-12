@@ -1,14 +1,16 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Dumbbell, History, Plus, TrendingUp } from 'lucide-react';
+import { Dumbbell, History, Plus, Trophy, X } from 'lucide-react';
 import { useWorkoutStore } from '@/stores/workoutStore';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 export function Dashboard() {
   const navigate = useNavigate();
+  const [showPRs, setShowPRs] = useState(false);
   const lastWorkout = useWorkoutStore((state) => state.getLastWorkout());
-  const workoutCount = useWorkoutStore((state) => state.getWorkoutCount());
-  const totalVolume = useWorkoutStore((state) => state.getTotalVolume());
+  const topPR = useWorkoutStore((state) => state.getTopPersonalRecord());
+  const personalRecords = useWorkoutStore((state) => state.getPersonalRecords());
 
   return (
     <div className="p-4 space-y-6">
@@ -31,23 +33,27 @@ export function Dashboard() {
         Iniciar Entrenamiento
       </button>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="bg-gray-900 rounded-xl p-4 border border-gray-800">
-          <div className="flex items-center gap-2 text-gray-400 mb-1">
-            <History className="w-4 h-4" />
-            <span className="text-sm">Entrenamientos</span>
-          </div>
-          <p className="text-2xl font-bold">{workoutCount}</p>
+      {/* Personal Records */}
+      <button
+        onClick={() => setShowPRs(true)}
+        className="w-full bg-gray-900 rounded-xl p-4 border border-gray-800 text-left
+          active:scale-95 transition-transform"
+      >
+        <div className="flex items-center gap-2 text-yellow-500 mb-2">
+          <Trophy className="w-5 h-5" />
+          <span className="text-sm font-medium">Personal Records</span>
         </div>
-        <div className="bg-gray-900 rounded-xl p-4 border border-gray-800">
-          <div className="flex items-center gap-2 text-gray-400 mb-1">
-            <TrendingUp className="w-4 h-4" />
-            <span className="text-sm">Volumen Total</span>
+        {topPR ? (
+          <div>
+            <p className="text-xl font-bold">{topPR.exerciseName}</p>
+            <p className="text-2xl font-bold text-yellow-500">
+              {topPR.weight} kg × {topPR.reps} reps
+            </p>
           </div>
-          <p className="text-2xl font-bold">{totalVolume.toLocaleString()} kg</p>
-        </div>
-      </div>
+        ) : (
+          <p className="text-gray-400">Sin registros aún</p>
+        )}
+      </button>
 
       {/* Last Workout */}
       {lastWorkout && (
@@ -94,6 +100,67 @@ export function Dashboard() {
           </button>
         </div>
       </div>
+
+      {/* PRs Modal */}
+      {showPRs && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-end">
+          <div className="w-full bg-gray-900 rounded-t-2xl p-4 max-h-[80vh] overflow-auto">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Trophy className="w-6 h-6 text-yellow-500" />
+                <h2 className="text-xl font-bold">Personal Records</h2>
+              </div>
+              <button
+                onClick={() => setShowPRs(false)}
+                className="p-2 hover:bg-gray-800 rounded-lg"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            
+            {personalRecords.length > 0 ? (
+              <div className="space-y-3">
+                {personalRecords.map((pr, index) => (
+                  <div
+                    key={pr.exerciseName}
+                    className="bg-gray-800 rounded-xl p-4 flex items-center justify-between"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`
+                        w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm
+                        ${index === 0 ? 'bg-yellow-500/20 text-yellow-500' : 
+                          index === 1 ? 'bg-gray-400/20 text-gray-400' :
+                          index === 2 ? 'bg-orange-600/20 text-orange-600' :
+                          'bg-gray-700 text-gray-500'}
+                      `}>
+                        {index + 1}
+                      </div>
+                      <div>
+                        <p className="font-medium">{pr.exerciseName}</p>
+                        <p className="text-sm text-gray-400">
+                          {format(new Date(pr.date), "d MMM yyyy", { locale: es })}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xl font-bold text-yellow-500">
+                        {pr.weight} kg
+                      </p>
+                      <p className="text-sm text-gray-400">{pr.reps} reps</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12 text-gray-400">
+                <Trophy className="w-16 h-16 mx-auto mb-4 opacity-30" />
+                <p>Aún no tienes personal records</p>
+                <p className="text-sm mt-2">Completa tu primer entrenamiento</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

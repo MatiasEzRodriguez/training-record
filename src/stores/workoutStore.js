@@ -180,6 +180,35 @@ export const useWorkoutStore = create(
           return total + workoutVolume;
         }, 0);
       },
+      
+      getPersonalRecords: () => {
+        const { workouts } = get();
+        const records = {};
+        
+        workouts.forEach((workout) => {
+          workout.exercises.forEach((ex) => {
+            (ex.sets || []).forEach((set) => {
+              if (!records[ex.name] || 
+                  set.weight > records[ex.name].weight ||
+                  (set.weight === records[ex.name].weight && set.reps > records[ex.name].reps)) {
+                records[ex.name] = {
+                  exerciseName: ex.name,
+                  weight: set.weight,
+                  reps: set.reps,
+                  date: workout.date,
+                };
+              }
+            });
+          });
+        });
+        
+        return Object.values(records).sort((a, b) => b.weight - a.weight);
+      },
+      
+      getTopPersonalRecord: () => {
+        const records = get().getPersonalRecords();
+        return records.length > 0 ? records[0] : null;
+      },
     }),
     {
       name: 'workout-storage-v3',
