@@ -255,7 +255,7 @@ export const useWorkoutStore = create(
       },
     }),
     {
-      name: 'workout-storage',
+      name: 'workout-storage-v2',
       onRehydrateStorage: () => (state) => {
         // Convert date strings back to Date objects
         if (state && state.workouts) {
@@ -263,6 +263,17 @@ export const useWorkoutStore = create(
             ...workout,
             date: new Date(workout.date),
           }));
+        }
+        // Ensure activeWorkout has proper structure
+        if (state && state.activeWorkout) {
+          if (!Array.isArray(state.activeWorkout.exercises)) {
+            state.activeWorkout.exercises = [];
+          }
+          state.activeWorkout.exercises.forEach(ex => {
+            if (!Array.isArray(ex.sets)) {
+              ex.sets = [];
+            }
+          });
         }
       },
     }
