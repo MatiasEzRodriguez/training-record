@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Dumbbell, History, Plus, Trophy, X } from 'lucide-react';
+import { Dumbbell, History, Plus, Trophy, X, Zap, ChevronRight } from 'lucide-react';
 import { useWorkoutStore } from '@/stores/workoutStore';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -8,9 +8,21 @@ import { es } from 'date-fns/locale';
 export function Dashboard() {
   const navigate = useNavigate();
   const [showPRs, setShowPRs] = useState(false);
+  const [showWorkoutOptions, setShowWorkoutOptions] = useState(false);
+  
   const lastWorkout = useWorkoutStore((state) => state.getLastWorkout());
   const topPR = useWorkoutStore((state) => state.getTopPersonalRecord());
   const personalRecords = useWorkoutStore((state) => state.getPersonalRecords());
+  const routines = useWorkoutStore((state) => state.routines);
+
+  const handleStartWorkout = (routineId = null) => {
+    setShowWorkoutOptions(false);
+    if (routineId) {
+      navigate(`/workout/${routineId}`);
+    } else {
+      navigate('/workout');
+    }
+  };
 
   return (
     <div className="p-4 space-y-6">
@@ -24,7 +36,7 @@ export function Dashboard() {
 
       {/* Start Workout Button */}
       <button
-        onClick={() => navigate('/workout')}
+        onClick={() => setShowWorkoutOptions(true)}
         className="w-full py-6 px-8 bg-blue-600 rounded-2xl font-bold text-lg
           active:scale-95 transition-transform min-h-[80px] flex items-center 
           justify-center gap-3 shadow-lg shadow-blue-900/50"
@@ -100,6 +112,89 @@ export function Dashboard() {
           </button>
         </div>
       </div>
+
+      {/* Workout Options Modal */}
+      {showWorkoutOptions && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-end">
+          <div className="w-full bg-gray-900 rounded-t-2xl p-4 max-h-[80vh] overflow-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold">Iniciar Entrenamiento</h2>
+              <button
+                onClick={() => setShowWorkoutOptions(false)}
+                className="p-2 hover:bg-gray-800 rounded-lg"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <div className="space-y-3">
+              {/* Free Workout Option */}
+              <button
+                onClick={() => handleStartWorkout()}
+                className="w-full bg-blue-600 rounded-xl p-4 flex items-center justify-between
+                  active:scale-95 transition-transform"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center">
+                    <Zap className="w-5 h-5 text-blue-200" />
+                  </div>
+                  <div className="text-left">
+                    <p className="font-bold text-lg">Entrenamiento Libre</p>
+                    <p className="text-sm text-blue-200">Sin rutina predefinida</p>
+                  </div>
+                </div>
+                <ChevronRight className="w-6 h-6 text-blue-200" />
+              </button>
+
+              {/* Divider */}
+              {routines.length > 0 && (
+                <div className="pt-2">
+                  <p className="text-sm text-gray-400 mb-3 px-1">Tus Rutinas</p>
+                  <div className="space-y-2">
+                    {routines.map((routine) => (
+                      <button
+                        key={routine.id}
+                        onClick={() => handleStartWorkout(routine.id)}
+                        className="w-full bg-gray-800 rounded-xl p-4 flex items-center justify-between
+                          active:scale-95 transition-transform border border-gray-700"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center">
+                            <Dumbbell className="w-5 h-5 text-gray-400" />
+                          </div>
+                          <div className="text-left">
+                            <p className="font-semibold">{routine.name}</p>
+                            <p className="text-sm text-gray-400">
+                              {routine.exerciseIds?.length || 0} ejercicios
+                            </p>
+                          </div>
+                        </div>
+                        <ChevronRight className="w-6 h-6 text-gray-500" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* No routines message */}
+              {routines.length === 0 && (
+                <div className="text-center py-6 text-gray-400">
+                  <p className="text-sm">No tienes rutinas guardadas</p>
+                  <button
+                    onClick={() => {
+                      setShowWorkoutOptions(false);
+                      navigate('/routines');
+                    }}
+                    className="mt-2 text-blue-500 text-sm font-medium"
+                  >
+                    Crear tu primera rutina →
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* PRs Modal */}
       {showPRs && (
