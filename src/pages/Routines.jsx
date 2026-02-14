@@ -1,33 +1,51 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Play, Trash2, Dumbbell } from 'lucide-react';
+import { ArrowLeft, Plus, Play, Trash2, Dumbbell, ChevronDown, ChevronUp } from 'lucide-react';
 import { useWorkoutStore } from '@/stores/workoutStore';
+import { useAuth } from '@/hooks/useAuth';
 import { DEFAULT_EXERCISES } from '@/constants/exercises';
 
 export function Routines() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [showNewRoutine, setShowNewRoutine] = useState(false);
   const [showNewExercise, setShowNewExercise] = useState(false);
   const [routineName, setRoutineName] = useState('');
   const [selectedExercises, setSelectedExercises] = useState([]);
   const [exerciseName, setExerciseName] = useState('');
   const [exerciseCategory, setExerciseCategory] = useState('');
+  const [isInitializing, setIsInitializing] = useState(false);
+  const [expandedCategories, setExpandedCategories] = useState({});
 
-  const { routines, exercises, addRoutine, addExercise, removeRoutine } = useWorkoutStore();
+  const { 
+    routines, 
+    exercises, 
+    addRoutine, 
+    addExercise, 
+    removeRoutine 
+  } = useWorkoutStore();
 
-  // Initialize default exercises if empty
-  if (exercises.length === 0) {
-    DEFAULT_EXERCISES.forEach((ex) => {
-      addExercise(ex);
-    });
-  }
+  // Initialize default exercises if empty (only once after Firestore loads)
+  useEffect(() => {
+    // Esperar un momento para que Firestore cargue los datos primero
+    const timer = setTimeout(() => {
+      if (exercises.length === 0 && user?.uid && !isInitializing) {
+        setIsInitializing(true);
+        DEFAULT_EXERCISES.forEach((ex) => {
+          addExercise(ex, user.uid);
+        });
+      }
+    }, 1000); // Esperar 1 segundo para que Firestore cargue
+
+    return () => clearTimeout(timer);
+  }, [exercises.length, user?.uid, addExercise, isInitializing]);
 
   const handleCreateRoutine = () => {
-    if (routineName.trim() && selectedExercises.length > 0) {
+    if (routineName.trim() && selectedExercises.length > 0 && user?.uid) {
       addRoutine({
         name: routineName.trim(),
         exerciseIds: selectedExercises,
-      });
+      }, user.uid);
       setRoutineName('');
       setSelectedExercises([]);
       setShowNewRoutine(false);
@@ -35,14 +53,20 @@ export function Routines() {
   };
 
   const handleCreateExercise = () => {
-    if (exerciseName.trim() && exerciseCategory.trim()) {
+    if (exerciseName.trim() && exerciseCategory.trim() && user?.uid) {
       addExercise({
         name: exerciseName.trim(),
         category: exerciseCategory.trim(),
-      });
+      }, user.uid);
       setExerciseName('');
       setExerciseCategory('');
       setShowNewExercise(false);
+    }
+  };
+
+  const handleRemoveRoutine = (routineId) => {
+    if (user?.uid) {
+      removeRoutine(routineId, user.uid);
     }
   };
 
@@ -53,6 +77,24 @@ export function Routines() {
         : [...prev, exerciseId]
     );
   };
+
+  const toggleCategory = (category) => {
+    setExpandedCategories((prev) => ({
+      ...prev,
+      [category]: !prev[category],
+    }));
+  };
+
+  // Agrupar ejercicios por categoría
+  const exercisesByCategory = exercises.reduce((acc, exercise) => {
+    const category = exercise.category || 'Otros';
+    if (!acc[category]) acc[category] = [];
+    acc[category].push(exercise);
+    return acc;
+  }, {});
+
+  // Ordenar categorías alfabéticamente
+  const sortedCategories = Object.keys(exercisesByCategory).sort();
 
   return (
     <div className="min-h-screen bg-gray-950">
@@ -107,7 +149,7 @@ export function Routines() {
                     <div className="flex-1">
                       <h3 className="font-semibold">{routine.name}</h3>
                       <p className="text-sm text-gray-400">
-                        {routine.exerciseIds.length} ejercicios
+                        {routine.exerciseIds?.length || 0} ejercicios
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
@@ -118,7 +160,7 @@ export function Routines() {
                         <Play className="w-5 h-5" />
                       </button>
                       <button
-                        onClick={() => removeRoutine(routine.id)}
+                        onClick={() => handleRemoveRoutine(routine.id)}
                         className="p-3 bg-red-600/20 text-red-400 rounded-xl 
                           active:scale-95 transition-transform"
                       >
@@ -179,20 +221,55 @@ export function Routines() {
 
             <h3 className="font-semibold mb-2">Selecciona ejercicios:</h3>
             <div className="space-y-2 mb-4 max-h-64 overflow-auto">
-              {exercises.map((exercise) => (
-                <button
-                  key={exercise.id}
-                  onClick={() => toggleExercise(exercise.id)}
-                  className={`w-full p-4 rounded-xl text-left transition-colors
-                    ${selectedExercises.includes(exercise.id)
-                      ? 'bg-blue-600'
-                      : 'bg-gray-800'
-                    }`}
-                >
-                  <p className="font-medium">{exercise.name}</p>
-                  <p className="text-sm opacity-80">{exercise.category}</p>
-                </button>
-              ))}
+              {sortedCategories.map((category) => {
+                const categoryExercises = exercisesByCategory[category];
+                const selectedInCategory = categoryExercises.filter((ex) =>
+                  selectedExercises.includes(ex.id)
+                ).length;
+
+                return (
+                  <div key={category} className="bg-gray-800 rounded-xl overflow-hidden">
+                    <button
+                      onClick={() => toggleCategory(category)}
+                      className="w-full p-4 flex items-center justify-between text-left active:scale-[0.98] transition-transform"
+                    >
+                      <span className="font-semibold">{category}</span>
+                      <div className="flex items-center gap-2">
+                        {selectedInCategory > 0 && (
+                          <span className="bg-blue-600 text-xs px-2 py-1 rounded-full">
+                            {selectedInCategory}
+                          </span>
+                        )}
+                        <span className="text-sm text-gray-400">{categoryExercises.length}</span>
+                        {expandedCategories[category] ? (
+                          <ChevronUp className="w-5 h-5 text-gray-400" />
+                        ) : (
+                          <ChevronDown className="w-5 h-5 text-gray-400" />
+                        )}
+                      </div>
+                    </button>
+                    {expandedCategories[category] && (
+                      <div className="border-t border-gray-700">
+                        {categoryExercises
+                          .sort((a, b) => a.name.localeCompare(b.name))
+                          .map((exercise) => (
+                            <button
+                              key={exercise.id}
+                              onClick={() => toggleExercise(exercise.id)}
+                              className={`w-full p-4 text-left transition-colors border-b border-gray-700/50 last:border-b-0
+                                ${selectedExercises.includes(exercise.id)
+                                  ? 'bg-blue-600/40 hover:bg-blue-600/50'
+                                  : 'bg-gray-800 hover:bg-gray-750'
+                                }`}
+                            >
+                              <p className="font-medium">{exercise.name}</p>
+                            </button>
+                          ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
 
             <div className="flex gap-3">

@@ -1,11 +1,39 @@
+import { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { Dashboard } from './pages/Dashboard';
-import { WorkoutLogger } from './pages/WorkoutLogger';
-import { History } from './pages/History';
-import { Routines } from './pages/Routines';
-import { BottomNav } from './components/BottomNav';
+import { AuthProvider, useAuth } from '@/hooks/useAuth';
+import { useWorkoutStore } from '@/stores/workoutStore';
+import { Dashboard } from '@/pages/Dashboard';
+import { WorkoutLogger } from '@/pages/WorkoutLogger';
+import { History } from '@/pages/History';
+import { Routines } from '@/pages/Routines';
+import { Login } from '@/pages/Login';
+import { BottomNav } from '@/components/BottomNav';
 
-function App() {
+function AppContent() {
+  const { user, loading } = useAuth();
+  const initializeFirestore = useWorkoutStore((state) => state.initializeFirestore);
+  const cleanup = useWorkoutStore((state) => state.cleanup);
+
+  // Inicializar Firestore cuando hay usuario autenticado
+  useEffect(() => {
+    if (user?.uid) {
+      initializeFirestore(user.uid);
+    }
+    return () => cleanup();
+  }, [user?.uid, initializeFirestore, cleanup]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Login />;
+  }
+
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100 pb-32">
       <Routes>
@@ -18,6 +46,14 @@ function App() {
       </Routes>
       <BottomNav />
     </div>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }
 

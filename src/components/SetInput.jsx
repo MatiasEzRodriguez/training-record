@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Plus, Minus, Check } from 'lucide-react';
 
+// eslint-disable-next-line react/prop-types
 export function SetInput({ onSubmit }) {
   const [reps, setReps] = useState('');
   const [weight, setWeight] = useState('');

@@ -100,7 +100,7 @@ export function History() {
 
               {workout.notes && (
                 <p className="mt-3 text-sm text-gray-500 italic">
-                  "{workout.notes}"
+                  &ldquo;{workout.notes}&rdquo;
                 </p>
               )}
             </div>

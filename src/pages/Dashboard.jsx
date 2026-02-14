@@ -9,7 +9,7 @@ export function Dashboard() {
   const navigate = useNavigate();
   const [showPRs, setShowPRs] = useState(false);
   const [showWorkoutOptions, setShowWorkoutOptions] = useState(false);
-  
+
   const lastWorkout = useWorkoutStore((state) => state.getLastWorkout());
   const topPR = useWorkoutStore((state) => state.getTopPersonalRecord());
   const personalRecords = useWorkoutStore((state) => state.getPersonalRecords());

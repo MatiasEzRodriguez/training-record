@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { 
   ArrowLeft, 
@@ -12,17 +12,20 @@ import {
   ChevronUp
 } from 'lucide-react';
 import { useWorkoutStore } from '@/stores/workoutStore';
+import { useAuth } from '@/hooks/useAuth';
 import { SetInput } from '@/components/SetInput';
 
 export function WorkoutLogger() {
   const navigate = useNavigate();
   const { routineId } = useParams();
+  const { user } = useAuth();
   const [showAddExercise, setShowAddExercise] = useState(false);
   const [restTimer, setRestTimer] = useState(null);
   const [restTime, setRestTime] = useState(60);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [showSuccessFeedback, setShowSuccessFeedback] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState({});
+  const [isStarting, setIsStarting] = useState(false);
 
   const toggleCategory = (category) => {
     setExpandedCategories(prev => ({
@@ -34,6 +37,7 @@ export function WorkoutLogger() {
   const {
     activeWorkout,
     exercises,
+    routines,
     startWorkout,
     addExerciseToWorkout,
     removeExerciseFromWorkout,
@@ -44,10 +48,25 @@ export function WorkoutLogger() {
     updateWorkoutNotes,
   } = useWorkoutStore();
 
-  // Start workout if not active
+  // Start workout if not active - using useEffect to avoid render phase update
+  useEffect(() => {
+    if (!activeWorkout && !isStarting) {
+      // If starting a saved routine, wait for routines to load
+      if (routineId && routines.length === 0) {
+        return; // Wait for routines to load
+      }
+      setIsStarting(true);
+      startWorkout('Entrenamiento Libre', routineId);
+    }
+  }, [activeWorkout, routineId, routines.length, isStarting, startWorkout]);
+
+  // Show loading spinner while starting or waiting for data
   if (!activeWorkout) {
-    startWorkout('Entrenamiento Libre', routineId);
-    return null;
+    return (
+      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
   }
 
   // Group exercises by category
@@ -88,8 +107,10 @@ export function WorkoutLogger() {
   };
 
   const handleComplete = () => {
-    completeWorkout();
-    navigate('/');
+    if (user?.uid) {
+      completeWorkout(user.uid);
+      navigate('/');
+    }
   };
 
   const handleCancel = () => {
@@ -246,9 +267,10 @@ export function WorkoutLogger() {
         {/* Complete Button */}
         <button
           onClick={handleComplete}
+          disabled={!user?.uid}
           className="w-full py-4 px-6 bg-green-600 rounded-xl font-bold text-lg
             active:scale-95 transition-transform min-h-[56px] flex items-center 
-            justify-center gap-2"
+            justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Save className="w-5 h-5" />
           Finalizar Entrenamiento
