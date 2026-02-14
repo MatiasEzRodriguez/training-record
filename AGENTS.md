@@ -32,7 +32,9 @@ npm test -- -t "test name pattern"
 - **Styling**: Tailwind CSS (mobile-first)
 - **Icons**: Lucide React
 - **State**: Zustand
-- **Storage**: localStorage
+- **Storage**: localStorage + Firestore (cloud sync)
+- **Authentication**: Firebase Auth (Google)
+- **Backend**: Firebase
 - **PWA**: vite-plugin-pwa
 
 ## Code Style
@@ -174,10 +176,45 @@ src/
 - `base: '/repo-name/'` in vite.config.js for GitHub Pages
 
 ## GitHub Pages Deployment
+
+**⚠️ IMPORTANTE: Usar GitHub Actions, NO `npm run deploy`**
+
+El deploy manual (`npm run deploy`) expone las credenciales de Firebase en el repositorio. Usar siempre GitHub Actions con secrets.
+
+### Configuración de Secrets
+
+En GitHub repo → Settings → Secrets and variables → Actions, crear:
+- `VITE_FIREBASE_API_KEY`
+- `VITE_FIREBASE_AUTH_DOMAIN`
+- `VITE_FIREBASE_PROJECT_ID`
+- `VITE_FIREBASE_STORAGE_BUCKET`
+- `VITE_FIREBASE_MESSAGING_SENDER_ID`
+- `VITE_FIREBASE_APP_ID`
+
+### Activar Pages
+
+Settings → Pages → Source: **GitHub Actions**
+
+### Ejecutar Deploy
+
+Se activa automáticamente en push a `master`, o manualmente en Actions → "Deploy to GitHub Pages" → "Run workflow"
+
 Ensure `vite.config.js` has:
 ```javascript
 export default {
   base: '/training-record/',
   plugins: [/* ... */],
 }
+```
+
+### Variables de Entorno Local
+
+Crear archivo `.env` (nunca subir al repo):
+```bash
+VITE_FIREBASE_API_KEY=tu_api_key
+VITE_FIREBASE_AUTH_DOMAIN=tu-proyecto.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=tu-proyecto
+VITE_FIREBASE_STORAGE_BUCKET=tu-proyecto.appspot.com
+VITE_FIREBASE_MESSAGING_SENDER_ID=123456789
+VITE_FIREBASE_APP_ID=1:123456789:web:abc123
 ```
