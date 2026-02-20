@@ -14,6 +14,27 @@ import { db } from '@/firebase';
 
 const id = () => Math.random().toString(36).substr(2, 9);
 
+const WORKOUT_DRAFT_KEY = 'workout_draft';
+
+const saveDraft = (workout) => {
+  if (workout) {
+    localStorage.setItem(WORKOUT_DRAFT_KEY, JSON.stringify(workout));
+  } else {
+    localStorage.removeItem(WORKOUT_DRAFT_KEY);
+  }
+};
+
+const loadDraft = () => {
+  try {
+    const draft = localStorage.getItem(WORKOUT_DRAFT_KEY);
+    return draft ? JSON.parse(draft) : null;
+  } catch {
+    return null;
+  }
+};
+
+const clearDraft = () => localStorage.removeItem(WORKOUT_DRAFT_KEY);
+
 export const useWorkoutStore = create((set, get) => ({
   // Estado
   workouts: [],
@@ -176,16 +197,17 @@ export const useWorkoutStore = create((set, get) => ({
           .filter(Boolean)
       : [];
 
-    set({
-      activeWorkout: {
-        id: id(),
-        name: routine?.name || name,
-        date: new Date(),
-        exercises: workoutExercises,
-        duration: 0,
-        notes: '',
-      },
-    });
+    const newWorkout = {
+      id: id(),
+      name: routine?.name || name,
+      date: new Date(),
+      exercises: workoutExercises,
+      duration: 0,
+      notes: '',
+    };
+
+    saveDraft(newWorkout);
+    set({ activeWorkout: newWorkout });
   },
 
   addExerciseToWorkout: (exerciseId) => {
@@ -195,71 +217,76 @@ export const useWorkoutStore = create((set, get) => ({
     const exercise = exercises.find((e) => e.id === exerciseId);
     if (!exercise) return;
 
-    set({
-      activeWorkout: {
-        ...activeWorkout,
-        exercises: [
-          ...activeWorkout.exercises,
-          {
-            id: id(),
-            exerciseId,
-            name: exercise.name,
-            sets: [],
-          },
-        ],
-      },
-    });
+    const updatedWorkout = {
+      ...activeWorkout,
+      exercises: [
+        ...activeWorkout.exercises,
+        {
+          id: id(),
+          exerciseId,
+          name: exercise.name,
+          sets: [],
+        },
+      ],
+    };
+
+    saveDraft(updatedWorkout);
+    set({ activeWorkout: updatedWorkout });
   },
 
   removeExerciseFromWorkout: (exerciseInstanceId) => {
     const { activeWorkout } = get();
     if (!activeWorkout) return;
 
-    set({
-      activeWorkout: {
-        ...activeWorkout,
-        exercises: activeWorkout.exercises.filter(
-          (ex) => ex.id !== exerciseInstanceId
-        ),
-      },
-    });
+    const updatedWorkout = {
+      ...activeWorkout,
+      exercises: activeWorkout.exercises.filter(
+        (ex) => ex.id !== exerciseInstanceId
+      ),
+    };
+
+    saveDraft(updatedWorkout);
+    set({ activeWorkout: updatedWorkout });
   },
 
   addSet: (exerciseId, newSet) => {
     set((state) => {
       if (!state.activeWorkout) return state;
 
-      return {
-        activeWorkout: {
-          ...state.activeWorkout,
-          exercises: state.activeWorkout.exercises.map((ex) => {
-            if (ex.id !== exerciseId) return ex;
-            return {
-              ...ex,
-              sets: [...(ex.sets || []), { ...newSet, id: id() }],
-            };
-          }),
-        },
+      const updatedWorkout = {
+        ...state.activeWorkout,
+        exercises: state.activeWorkout.exercises.map((ex) => {
+          if (ex.id !== exerciseId) return ex;
+          return {
+            ...ex,
+            sets: [...(ex.sets || []), { ...newSet, id: id() }],
+          };
+        }),
       };
+
+      saveDraft(updatedWorkout);
+      return { activeWorkout: updatedWorkout };
     });
   },
 
   removeSet: (exerciseId, setId) =>
     set((state) => {
       if (!state.activeWorkout) return state;
-      return {
-        activeWorkout: {
-          ...state.activeWorkout,
-          exercises: state.activeWorkout.exercises.map((ex) =>
-            ex.id === exerciseId
-              ? {
-                  ...ex,
-                  sets: (ex.sets || []).filter((s) => s.id !== setId),
-                }
-              : ex
-          ),
-        },
+
+      const updatedWorkout = {
+        ...state.activeWorkout,
+        exercises: state.activeWorkout.exercises.map((ex) =>
+          ex.id === exerciseId
+            ? {
+                ...ex,
+                sets: (ex.sets || []).filter((s) => s.id !== setId),
+              }
+            : ex
+        ),
       };
+
+      saveDraft(updatedWorkout);
+      return { activeWorkout: updatedWorkout };
     }),
 
   completeWorkout: async (userId) => {
@@ -278,6 +305,7 @@ export const useWorkoutStore = create((set, get) => ({
         duration,
         completedAt: serverTimestamp(),
       });
+      clearDraft();
       set({ activeWorkout: null });
     } catch (error) {
       console.error('Error saving workout:', error);
@@ -285,13 +313,34 @@ export const useWorkoutStore = create((set, get) => ({
     }
   },
 
-  cancelWorkout: () => set({ activeWorkout: null }),
+  cancelWorkout: () => {
+    clearDraft();
+    set({ activeWorkout: null });
+  },
 
   updateWorkoutNotes: (notes) =>
     set((state) => {
       if (!state.activeWorkout) return state;
-      return { activeWorkout: { ...state.activeWorkout, notes } };
+      const updatedWorkout = { ...state.activeWorkout, notes };
+      saveDraft(updatedWorkout);
+      return { activeWorkout: updatedWorkout };
     }),
+
+  hasDraft: () => {
+    return localStorage.getItem(WORKOUT_DRAFT_KEY) !== null;
+  },
+
+  restoreDraft: () => {
+    const draft = loadDraft();
+    if (draft) {
+      draft.date = new Date(draft.date);
+      set({ activeWorkout: draft });
+    }
+  },
+
+  discardDraft: () => {
+    clearDraft();
+  },
 
   // Exportar datos (para backup)
   exportData: () =>

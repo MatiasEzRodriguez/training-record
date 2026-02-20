@@ -38,7 +38,6 @@ export function WorkoutLogger() {
     activeWorkout,
     exercises,
     routines,
-    startWorkout,
     addExerciseToWorkout,
     removeExerciseFromWorkout,
     addSet,
@@ -51,14 +50,18 @@ export function WorkoutLogger() {
   // Start workout if not active - using useEffect to avoid render phase update
   useEffect(() => {
     if (!activeWorkout && !isStarting) {
-      // If starting a saved routine, wait for routines to load
       if (routineId && routines.length === 0) {
-        return; // Wait for routines to load
+        return;
       }
       setIsStarting(true);
-      startWorkout('Entrenamiento Libre', routineId);
+      const { hasDraft, restoreDraft, startWorkout } = useWorkoutStore.getState();
+      if (hasDraft()) {
+        restoreDraft();
+      } else {
+        startWorkout('Entrenamiento Libre', routineId);
+      }
     }
-  }, [activeWorkout, routineId, routines.length, isStarting, startWorkout]);
+  }, [activeWorkout, routineId, routines.length, isStarting]);
 
   // Show loading spinner while starting or waiting for data
   if (!activeWorkout) {

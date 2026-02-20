@@ -5,13 +5,16 @@ Aplicación PWA para seguimiento de entrenamientos, optimizada para dispositivos
 ## Características
 
 - ✅ Diseño mobile-first con tema oscuro
-- ✅ Guardado automático en localStorage
-- ✅ Exportar/Importar datos en JSON
+- ✅ Persistencia de datos con Firebase Firestore
+- ✅ Auto-guardado de entrenamientos en curso (localStorage)
+- ✅ Recuperación automática de sesiones interrumpidas
 - ✅ Rutinas personalizadas y entrenamiento libre
 - ✅ Timer de descanso configurable
 - ✅ Historial completo de entrenamientos
+- ✅ Personal Records (PRs) automáticos
 - ✅ Barra de navegación inferior tipo app nativa
 - ✅ PWA instalable en Android/iOS
+- ✅ Exportar/Importar datos en JSON
 
 ## Instalación
 
@@ -59,11 +62,12 @@ Para desplegar:
 ```
 src/
   components/     # Componentes reutilizables
-  pages/         # Páginas de la aplicación
-  stores/        # Zustand stores
-  constants/     # Constantes (ejercicios predefinidos)
-  utils/         # Utilidades (export/import)
-  test/          # Configuración de tests
+  pages/          # Páginas de la aplicación
+  stores/         # Zustand stores (estado global)
+  hooks/          # Custom hooks (autenticación)
+  constants/      # Constantes (ejercicios predefinidos)
+  utils/          # Utilidades (export/import)
+  test/           # Configuración de tests
 ```
 
 ## Stack Tecnológico
@@ -71,11 +75,17 @@ src/
 - React 18 + Vite
 - Tailwind CSS (mobile-first, dark theme)
 - Zustand (estado)
+- Firebase Firestore (persistencia)
+- Firebase Auth (autenticación)
 - Lucide React (iconos)
 - date-fns (fechas)
-- uuid (IDs únicos)
 - vite-plugin-pwa (PWA)
 
-## Licencia
+## Auto-guardado de Entrenamientos
 
-MIT
+La aplicación implementa un sistema de auto-guardado para entrenamientos en curso:
+
+- Los cambios se guardan automáticamente en `localStorage`
+- Si el usuario recarga la página o cierra el navegador por error, el entrenamiento se restaura automáticamente
+- Al finalizar o cancelar un entrenamiento, el borrador se limpia
+- El Dashboard muestra un aviso cuando hay un entrenamiento pendiente
