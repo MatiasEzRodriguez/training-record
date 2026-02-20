@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Dumbbell, History, Plus, Trophy, X, Zap, ChevronRight } from 'lucide-react';
+import { Dumbbell, History, Plus, Trophy, X, Zap, ChevronRight, AlertCircle } from 'lucide-react';
 import { useWorkoutStore } from '@/stores/workoutStore';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -9,11 +9,26 @@ export function Dashboard() {
   const navigate = useNavigate();
   const [showPRs, setShowPRs] = useState(false);
   const [showWorkoutOptions, setShowWorkoutOptions] = useState(false);
+  const [hasPendingDraft, setHasPendingDraft] = useState(false);
 
   const lastWorkout = useWorkoutStore((state) => state.getLastWorkout());
   const topPR = useWorkoutStore((state) => state.getTopPersonalRecord());
   const personalRecords = useWorkoutStore((state) => state.getPersonalRecords());
   const routines = useWorkoutStore((state) => state.routines);
+
+  useEffect(() => {
+    const checkDraft = () => {
+      setHasPendingDraft(useWorkoutStore.getState().hasDraft());
+    };
+    checkDraft();
+    const unsubscribe = useWorkoutStore.subscribe(checkDraft);
+    return unsubscribe;
+  }, []);
+
+  const handleDiscardDraft = () => {
+    useWorkoutStore.getState().discardDraft();
+    setHasPendingDraft(false);
+  };
 
   const handleStartWorkout = (routineId = null) => {
     setShowWorkoutOptions(false);
@@ -33,6 +48,37 @@ export function Dashboard() {
           {format(new Date(), "EEEE, d 'de' MMMM", { locale: es })}
         </p>
       </div>
+
+      {/* Pending Draft Banner */}
+      {hasPendingDraft && (
+        <div className="bg-amber-900/30 border border-amber-700/50 rounded-xl p-4">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" />
+            <div className="flex-1">
+              <p className="font-semibold text-amber-200">Entrenamiento pendiente</p>
+              <p className="text-sm text-amber-300/80 mt-1">
+                Tienes un entrenamiento sin terminar guardado
+              </p>
+              <div className="flex gap-2 mt-3">
+                <button
+                  onClick={() => navigate('/workout')}
+                  className="flex-1 py-2 px-4 bg-amber-600 rounded-lg font-medium
+                    active:scale-95 transition-transform text-sm"
+                >
+                  Continuar
+                </button>
+                <button
+                  onClick={handleDiscardDraft}
+                  className="py-2 px-4 bg-gray-700 rounded-lg font-medium
+                    active:scale-95 transition-transform text-sm"
+                >
+                  Descartar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Start Workout Button */}
       <button
